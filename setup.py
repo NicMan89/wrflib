@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name='wrflib',
+    name='v1',
     version='0.0.1',
     description='',
     url='https://github.com/NicMan89/wrflib',
