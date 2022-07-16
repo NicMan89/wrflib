@@ -6,3 +6,4 @@ pyproj==3.3.0
 Shapely==1.8.1.post1
 xarray==0.20.1
 matplotlib==3.5.1
+cartopy==0.20.3
