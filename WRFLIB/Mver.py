@@ -39,7 +39,7 @@ def crosstab(obs_time,obs_var,sim_time,sim_var,S=None,toll=0):
 
 def dichotomous(df,method='ETS'):
     if method=='all':
-    st=['ETS (default)','FAR','FBIAS','POD','POFD','TS']
+        st=['ETS (default)','FAR','FBIAS','POD','POFD','TS']
         print(st)
         return
     T=int(df.sum().sum())
