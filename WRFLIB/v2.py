@@ -87,7 +87,7 @@ def jointime(LISTNC): #-----VERIFICATA
     return WRFdate2
 
 
-def join2time_var3d(LISTNC,var,varout=1):#-----NEW VERIFICATA....DA VERICARE NEI PLOT
+def j2t_3d(LISTNC,var,varout=1):#-----NEW VERIFICATA....DA VERICARE NEI PLOT
     Twrf2=_initvar_(var)
     if len(Twrf2.shape) != 3:
         raise ValueError('Error in input: incorrect var')
@@ -107,7 +107,7 @@ def join2time_var3d(LISTNC,var,varout=1):#-----NEW VERIFICATA....DA VERICARE NEI
         raise ValueError('Error in input: varout must be 1 or 3')
 
 
-def join2time_var4d(LISTNC,var,varout=1):#-----NEW VERIFICATA....DA VERICARE NEI PLOT
+def j2t_4d(LISTNC,var,varout=1):#-----NEW VERIFICATA....DA VERICARE NEI PLOT
     #(PB + PHB)/g
     if var=='z':
         Z=_initvar_('PH')
@@ -139,7 +139,7 @@ def join2time_var4d(LISTNC,var,varout=1):#-----NEW VERIFICATA....DA VERICARE NEI
         raise ValueError('Error in input: varout must be 1 or 3')
 
 
-def nearcell_frompoint(LAT,LON): #----- NEW VERIFICATA
+def nearestcell_fp(LAT,LON): #----- NEW VERIFICATA
     latss=np.array(lats).reshape(lats.size)
     lonss=np.array(lons).reshape(lons.size)
     dist=np.ones(lats.shape[0]*lons.shape[1])
@@ -174,7 +174,7 @@ def wrfrun_info(LISTNC,varlist=''):
             print('\n',ncfile.variables[varia[x].strip()])
 
 
-def spat_CutFromBox(var,latlim,lonlim):#---- NEW VERIFICATA
+def SpatCutBox(var,latlim,lonlim):#---- NEW VERIFICATA
     loncut=(lons>=lonlim[0])&(lons<=lonlim[1])
     latcut=(lats>=latlim[0])&(lats<=latlim[1])
     cut=np.array(loncut*latcut)
@@ -194,7 +194,7 @@ def spat_CutFromBox(var,latlim,lonlim):#---- NEW VERIFICATA
         raise ValueError('Array var must be 3d or 4d')
 
 
-def spat_ReprojectFromWRF(LISTNC,gdf,flag=2): #----- DA VERIFICARE
+def SpatRepFromWRF(LISTNC,gdf,flag=2): #----- DA VERIFICARE
     ncfile=xr.open_dataset(LISTNC[0])
     map_proj = int(ncfile.MAP_PROJ)
     # Lambert Conformal Conic
@@ -220,35 +220,31 @@ def spat_ReprojectFromWRF(LISTNC,gdf,flag=2): #----- DA VERIFICARE
     elif map_proj == 6:
         wrf_proj = pyproj.Proj(proj='eqc',units='m',a=6370000,b=6370000,
             lon_0=ncfile.STAND_LON,)
+    
+    wrf_crs=pyproj.CRS.from_proj4(str(wrf_proj))
     if flag==2:
         gdf1=gdf.to_crs('EPSG:4326')#str(wrf_proj)
-        return gdf1,str(wrf_proj)
+        return gdf1,wrf_crs
     elif flag==1:
         gdf1=gdf.to_crs('EPSG:4326')#str(wrf_proj)
         return gdf1
     elif flag==-1:
-        return str(wrf_proj)
+        return wrf_crs
     else:
         raise ValueError('Error in input: flag must be -1,1,2 (default = 2)')
 
 
-def spat_CutFromVect(LISTNC,var,gdf,flag=True): 
+def SpatCutVect(LISTNC,var,gdf,flag=True): 
     #----- NEW DA VERIFICARE la proiezione con 4326 sembra funzioni meglio
-    '''
-    ncfile is a xarray DataFrame, var is a xarray DataArray
-    varcut is a xarray DataArray with np.nan outside the polygon in gdf
-    '''
     if gdf.crs!='epsg:4326':
         print('GeoDataFrame Reprojection...')
-        gdf=gdf.to_crs('epsg:4326')
+        gdf=gdf.to_crs('EPSG:4326')
     if len(var.shape)>4 or len(var.shape)<2:
         raise Exception(f'Error in variable shape length: len(var.shape)={len(var.shape)} expect 2, 3 or 4 ')
-    
-    #lat,lon=_coords_(var)
     shape=lats.shape
     lat=lats.reshape(lats.size)
     lon=lons.reshape(lats.size)
-    pin=[]#posizione dei punti interni al poligono
+    pin=[]
     cells=int(lat.size)
     for cell in range(cells):
         point=Point(lon[cell],lat[cell])
@@ -270,3 +266,134 @@ def spat_CutFromVect(LISTNC,var,gdf,flag=True):
     else:
         return varcut
         
+
+#https://www.cawcr.gov.au/projects/verification/
+class MVer():
+
+    def crosstab(obs_time,obs_var,sim_time,sim_var,S=None,toll=0):
+        obs_time=np.array(obs_time,dtype='datetime64[m]').squeeze()
+        obs_idx=np.empty(0,dtype=int)
+        sim_idx=np.empty(0,dtype=int)
+        for x in range(len(obs_time)):
+            pos=np.where(obs_time[x]==sim_time)
+            if np.any(pos):
+                pos=int(pos[0])
+                sim_idx=np.append(sim_idx,pos)
+                obs_idx=np.append(obs_idx,x)
+            else:
+                continue
+        if S==None:    
+            S=np.median(obs_var[obs_idx])
+        P=pd.DataFrame(columns=['HIT','MISS','FALSE_ALLARM','CORRECT_NEGATIVE'],index=[len(sim_idx)])
+        Nh,Nm,Nfa,Ncn=0,0,0,0
+        for x in range(len(sim_idx)):
+            if (obs_var[obs_idx[x]]>=S) and (sim_var[sim_idx[x]]-toll>=S):
+                Nh+=1
+            elif (obs_var[obs_idx[x]]>=S) and (sim_var[sim_idx[x]]+toll<S):
+                Nm+=1
+            elif (obs_var[obs_idx[x]]<S) and (sim_var[sim_idx[x]]-toll>=S):
+                Nfa+=1
+            else:
+                Ncn+=1
+        P['HIT']=Nh/len(sim_idx)
+        P['MISS']=Nm/len(sim_idx)
+        P['FALSE_ALLARM']=Nfa/len(sim_idx)
+        P['CORRECT_NEGATIVE']=Ncn/len(sim_idx)
+        return P
+
+    def dichotomous(df,method='ETS'):
+        if method=='all':
+            st=['ETS (default)','FAR','FBIAS','POD','POFD','TS']
+            print(st)
+            return
+        T=int(df.sum().sum())
+        Nh=df['HIT']
+        Nm=df['MISS']
+        Nfa=df['FALSE_ALLARM']
+        Ncn=df['CORRECT_NEGATIVE']
+        if method=='ETS':
+            ref=(Nh+Nfa)*(Nh+Nm)/T
+            ETS=(Nh-ref)/(Nh+Nfa+Nm-ref)
+            print('Equitable threat score: ',ETS)
+            return ETS
+        elif method=='FAR':
+            FAR=Nfa/(Nh+Nfa)
+            print('False allarm ratio: ',FAR)
+            return FAR
+        elif method=='FBIAS':
+            FBIAS=(Nh+Nfa)/(Nh+Nm)
+            print('Frequency bias: ',FBIAS)
+            return FBIAS
+        elif method=='POD':
+            POD=Nh/(Nh+Nm)
+            print('Probability of detection: ',POD)
+            return POD
+        elif method=='POFD':
+            POFD=Nfa/(Nfa+Ncn)
+            print('Probability of false detection: ',POFD)
+            return POFD
+        elif method=='TS':
+            TS=Nh/(Nh+Nm+Nfa)
+            print('Threat score: ',TS)
+            return TS
+        else:
+            raise ValueError('Error in input: invalid method')
+            return
+
+    def continuous(obs_time,obs_var,sim_time,sim_var,method='RMSE'):
+        obs_time=np.array(obs_time,dtype='datetime64[m]').squeeze()
+        obs_idx=np.empty(0,dtype=int)
+        sim_idx=np.empty(0,dtype=int)
+        for x in range(len(obs_time)):
+            pos=np.where(obs_time[x]==sim_time)
+            if np.any(pos):
+                pos=int(pos[0])
+                sim_idx=np.append(sim_idx,pos)
+                obs_idx=np.append(obs_idx,x)
+            else:
+                continue
+        obs=obs_var[obs_idx]
+        sim=sim_var[sim_idx]
+        if len(obs)!=len(sim):
+            raise ValueError('Different size for obs and sim arrays')
+            return
+        try:
+            if method=='scatter':
+                m=np.min([sim[0],obs[0]])
+                fig,ax=plt.subplots(1,1)
+                plt.scatter(sim,obs)
+                ax.axline((m, m),slope=1,color='r')
+                plt.xlabel('Simulation',fontsize='medium')
+                plt.ylabel('Observation',fontsize='medium')
+                plt.grid(True)
+                return fig
+            elif method=='box':
+                data={'observation':obs,'simulation':sim}
+                fig,ax=plt.subplots(1,1)
+                ax.boxplot(data.values(), 0, '')
+                ax.set_xticklabels(data.keys())
+                plt.grid(True)
+                return fig
+            elif method=='bias':
+                bi=np.mean(sim)/np.mean(obs)
+                return bi
+            elif method=='MAE':
+                mae=np.mean(np.abs(sim-obs))
+                return mae
+            elif method=='MSE':
+                mse=np.mean((sim-obs)**2)
+                return mse
+            elif method=='RMSE':
+                rmse=np.sqrt(np.mean((sim-obs)**2))
+                return rmse
+            elif method=='MBE':
+                mbe=np.mean(sim-obs)
+                return mbe
+            elif method=='r':
+                r=np.sum((sim-np.mean(sim))*(obs-np.mean(obs)))/(np.sqrt(np.sum((sim-np.mean(sim))**2))*np.sqrt(np.sum((obs-np.mean(obs))**2)))
+                return r
+        except BaseException as err:
+            message=f"Unexpected {err=}, {type(err)=}"
+        else:
+            raise ValueError(message)
+            return
