@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name='v2',
+    name='WRFLIB',
     version='0.0.2',
     description='',
     url='https://github.com/NicMan89/wrflib',
@@ -13,7 +13,8 @@ setup(
     author_email='nicolamanconi8@gmail.com',
     license='MIT',
     install_requires=required,
-    packages=find_packages(include=['WRFLIB','WRFLIB.*']),
+    packages=find_packages(),
     zip_safe=False
 )
 #pipreqs /home/project/location
+#include=['WRFLIB','WRFLIB.*']
