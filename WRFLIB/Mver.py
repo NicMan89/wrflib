@@ -77,6 +77,10 @@ def dichotomous(df,method='ETS'):
         return
 
 def continuous(obs_time,obs_var,sim_time,sim_var,method='RMSE'):
+    if method=='all':
+        st=['RMSE (default)','scatter','box','bias','MAE','MSE','MBE','r']
+        print(st)
+        return
     obs_time=np.array(obs_time,dtype='datetime64[m]').squeeze()
     obs_idx=np.empty(0,dtype=int)
     sim_idx=np.empty(0,dtype=int)
