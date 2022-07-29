@@ -31,8 +31,8 @@ def Profile(DirPath,dom,pfx,levels,ext='TH',return_time=False):
     q = os.path.join(DirPath, search_criteria)
     LISTNC = sorted(glob.glob(q))
     colnames=['time']
-        for x in range(levels):
-            colnames.append('lev '+str(x+1))
+    for x in range(levels):
+        colnames.append('lev '+str(x+1))
     u=pd.read_csv(LISTNC[0],sep='\s+',skiprows=1,names=colnames,index_col=False)
     if not return_time:
         u.drop(u.columns[0],axis=1,inplace=True)
