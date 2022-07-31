@@ -44,7 +44,7 @@ def Profile(DirPath,dom,pfx,levels,ext='TH',return_time=False):
             info=i.readline()[:-1]
         d=info.split(' ')
         first=np.array(d[-1].replace('_','T'),dtype='M8[ms]').astype('O')
-        timets=np.array(f.ts_hour)
+        timets=np.array(u.time)
         date=np.empty(0,dtype='datetime64[ns]')
         for y in range(len(timets)):
             delta=datetime.timedelta(hours=timets[y])

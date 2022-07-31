@@ -238,7 +238,7 @@ def SpatCutVect(LISTNC,var,gdf,flag=True):
     #----- NEW DA VERIFICARE la proiezione con 4326 sembra funzioni meglio
     if gdf.crs!='epsg:4326':
         print('GeoDataFrame Reprojection...')
-        gdf=gdf.to_crs('EPSG:4326')
+        gdf=gdf.to_crs('epsg:4326')
     if len(var.shape)>4 or len(var.shape)<2:
         raise Exception(f'Error in variable shape length: len(var.shape)={len(var.shape)} expect 2, 3 or 4 ')
     shape=lats.shape
