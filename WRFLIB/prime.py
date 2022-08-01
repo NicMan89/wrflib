@@ -43,7 +43,7 @@ def _initvarB_(var):#----- AUSILIARIA VERIFICATA
         T=np.empty([var.shape[0],var.shape[1]])
     elif len(var.shape)==3:
         T=np.empty([var.shape[0],var.shape[1],var.shape[2]])
-    elif len(var.shape==4):
+    elif len(var.shape)==4:
         T=np.empty([var.shape[0],var.shape[1],var.shape[2],var.shape[3]])
     return T
 
