@@ -97,44 +97,42 @@ def continuous(obs_time,obs_var,sim_time,sim_var,method='RMSE'):
     if len(obs)!=len(sim):
         raise ValueError('Different size for obs and sim arrays')
         return
-    try:
-        if method=='scatter':
-            m=np.min([sim[0],obs[0]])
-            fig,ax=plt.subplots(1,1)
-            plt.scatter(sim,obs)
-            ax.axline((m, m),slope=1,color='r')
-            plt.xlabel('Simulation',fontsize='medium')
-            plt.ylabel('Observation',fontsize='medium')
-            plt.grid(True)
-            return fig
-        elif method=='box':
-            data={'observation':obs,'simulation':sim}
-            fig,ax=plt.subplots(1,1)
-            ax.boxplot(data.values(), 0, '')
-            ax.set_xticklabels(data.keys())
-            plt.grid(True)
-            return fig
-        elif method=='bias':
-            bi=np.mean(sim)/np.mean(obs)
-            return bi
-        elif method=='MAE':
-            mae=np.mean(np.abs(sim-obs))
-            return mae
-        elif method=='MSE':
-            mse=np.mean((sim-obs)**2)
-            return mse
-        elif method=='RMSE':
-            rmse=np.sqrt(np.mean((sim-obs)**2))
-            return rmse
-        elif method=='MBE':
-            mbe=np.mean(sim-obs)
-            return mbe
-        elif method=='r':
-            r=np.sum((sim-np.mean(sim))*(obs-np.mean(obs)))/(np.sqrt(np.sum((sim-np.mean(sim))**2))*np.sqrt(np.sum((obs-np.mean(obs))**2)))
-            return r
-    except BaseException as err:
-        message=f"Unexpected {err=}, {type(err)=}"
+    
+    if method=='scatter':
+        m=np.min([sim[0],obs[0]])
+        fig,ax=plt.subplots(1,1)
+        plt.scatter(sim,obs)
+        ax.axline((m, m),slope=1,color='r')
+        plt.xlabel('Simulation',fontsize='medium')
+        plt.ylabel('Observation',fontsize='medium')
+        plt.grid(True)
+        return fig
+    elif method=='box':
+        data={'observation':obs,'simulation':sim}
+        fig,ax=plt.subplots(1,1)
+        ax.boxplot(data.values(), 0, '')
+        ax.set_xticklabels(data.keys())
+        plt.grid(True)
+        return fig
+    elif method=='bias':
+        bi=np.mean(sim)/np.mean(obs)
+        return bi
+    elif method=='MAE':
+        mae=np.mean(np.abs(sim-obs))
+        return mae
+    elif method=='MSE':
+        mse=np.mean((sim-obs)**2)
+        return mse
+    elif method=='RMSE':
+        rmse=np.sqrt(np.mean((sim-obs)**2))
+        return rmse
+    elif method=='MBE':
+        mbe=np.mean(sim-obs)
+        return mbe
+    elif method=='r':
+        r=np.sum((sim-np.mean(sim))*(obs-np.mean(obs)))/(np.sqrt(np.sum((sim-np.mean(sim))**2))*np.sqrt(np.sum((obs-np.mean(obs))**2)))
+        return r
     else:
-        raise ValueError(message)
+        raise ValueError('Error in input: invalid method')
         return
     
