@@ -3,6 +3,6 @@ pandas
 Shapely
 geopandas
 geopy==2.2.0
-pyproj==3.3.0
+pyproj
 xarray[io]
 matplotlib
