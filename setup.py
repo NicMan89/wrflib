@@ -12,6 +12,7 @@ setup(
     author='Nicola Manconi',
     author_email='nicolamanconi8@gmail.com',
     license='MIT',
+    python_requires='>=3.6',
     install_requires=required,
     packages=find_packages(),
     zip_safe=False
